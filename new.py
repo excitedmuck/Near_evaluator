@@ -225,14 +225,32 @@ def display_analysis_results(analysis, title):
                 for comment in analysis['key_elements']['comments']:
                     st.info(comment)
     
-    # Download button in sidebar
-    with st.sidebar:
-        st.download_button(
-            label="⬇️ Download Analysis as JSON",
-            data=json.dumps(analysis, indent=2),
-            file_name=f"proposal_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-            mime="application/json"
-        )
+    # Add download button to sidebar
+    st.sidebar.markdown("### Download Analysis")
+    
+    # Convert results to CSV format
+    csv_data = {
+        'Metric': ['Writing Quality', 'Proposal Clarity', 'Key Elements'],
+        'Score': [
+            analysis['writing_quality']['score'],
+            analysis['proposal_clarity']['score'],
+            analysis['key_elements']['score']
+        ],
+        'Explanation': [
+            analysis['writing_quality']['explanation'],
+            analysis['proposal_clarity']['explanation'],
+            analysis['key_elements']['explanation']
+        ]
+    }
+    df = pd.DataFrame(csv_data)
+    csv_str = df.to_csv(index=False)
+    
+    st.sidebar.download_button(
+        label="Download Analysis as CSV",
+        data=csv_str,
+        file_name=f"analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        mime="text/csv"
+    )
 
 def main():
     st.set_page_config(page_title="NEAR Proposal Analyzer", layout="wide")
