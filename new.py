@@ -229,18 +229,35 @@ def display_analysis_results(analysis, title):
     st.sidebar.markdown("### Download Analysis")
     
     # Convert results to CSV format
+    metrics = [
+        'Writing Quality',
+        'Proposal Clarity',
+        'Key Elements',
+        'Perplexity Analysis'
+    ]
+    scores = [
+        analysis['writing_quality']['score'],
+        analysis['proposal_clarity']['score'],
+        analysis['key_elements']['score'],
+        'N/A'  # Perplexity doesn't have a score
+    ]
+    explanations = [
+        analysis['writing_quality']['explanation'],
+        analysis['proposal_clarity']['explanation'],
+        analysis['key_elements']['explanation'],
+        analysis.get('perplexity_analysis', 'No Perplexity analysis available')
+    ]
+    elements_found = ', '.join(analysis['key_elements']['elements_found']) if analysis['key_elements']['elements_found'] else 'None'
+    elements_missing = ', '.join(analysis['key_elements']['elements_missing']) if analysis['key_elements']['elements_missing'] else 'None'
+    comments = '; '.join(analysis['key_elements']['comments']) if analysis['key_elements']['comments'] else 'None'
+    
     csv_data = {
-        'Metric': ['Writing Quality', 'Proposal Clarity', 'Key Elements'],
-        'Score': [
-            analysis['writing_quality']['score'],
-            analysis['proposal_clarity']['score'],
-            analysis['key_elements']['score']
-        ],
-        'Explanation': [
-            analysis['writing_quality']['explanation'],
-            analysis['proposal_clarity']['explanation'],
-            analysis['key_elements']['explanation']
-        ]
+        'Metric': metrics,
+        'Score': scores,
+        'Explanation': explanations,
+        'Elements Found': [elements_found if m == 'Key Elements' else '' for m in metrics],
+        'Elements Missing': [elements_missing if m == 'Key Elements' else '' for m in metrics],
+        'Additional Comments': [comments if m == 'Key Elements' else '' for m in metrics]
     }
     df = pd.DataFrame(csv_data)
     csv_str = df.to_csv(index=False)
@@ -253,8 +270,18 @@ def display_analysis_results(analysis, title):
     )
 
 def main():
-    st.set_page_config(page_title="NEAR Proposal Analyzer", layout="wide")
-    st.title("NEAR Proposal Analyzer")
+    st.set_page_config(
+        page_title="NEAR Proposal Analyzer",
+        layout="wide",
+        page_icon="image.png"
+    )
+    
+    # Display logo and title in a row with less spacing
+    col1, col2 = st.columns([0.15, 0.65])
+    with col1:
+        st.image("image.png", width=100)
+    with col2:
+        st.markdown("<h1 style='margin-top: -10px;'>NEAR Proposal Analyzer</h1>", unsafe_allow_html=True)
     st.write("Enter a NEAR governance forum URL to analyze the proposal.")
     
     # URL input
@@ -284,6 +311,8 @@ def main():
                     st.markdown("### NEAR Ecosystem Analysis")
                     pplx_analysis = get_perplexity_analysis(result['content'])
                     st.write(pplx_analysis)
+                    # Store Perplexity analysis in the result dictionary
+                    result['perplexity_analysis'] = pplx_analysis
 
 if __name__ == "__main__":
     main()
